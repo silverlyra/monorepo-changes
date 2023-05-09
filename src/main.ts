@@ -1,19 +1,35 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+
+import {getWorkspaceChanges} from './compare'
+import {detect} from './workspace'
 
 async function run(): Promise<void> {
-  try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
+  const now = new Date()
+  const workspaces = await detect()
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
-
-    core.setOutput('time', new Date().toTimeString())
-  } catch (error) {
-    if (error instanceof Error) core.setFailed(error.message)
+  if (core.isDebug()) {
+    // eslint-disable-next-line no-console
+    console.dir(workspaces, {colors: true})
   }
+
+  const changes = getWorkspaceChanges(workspaces)
+  for (const base of [...changes.keys()].sort((a, b) => a.localeCompare(b))) {
+    if (changes.get(base)) core.info(`Workspace changed: ${base}`)
+  }
+
+  const paths = new Map(
+    [...workspaces.values()]
+      .map(workspace =>
+        [...workspace.aliases].map(alias => [alias, workspace.path] as const)
+      )
+      .flat(1)
+  )
+
+  core.setOutput('changes', JSON.stringify(Object.fromEntries(changes)))
+  core.setOutput('paths', JSON.stringify(Object.fromEntries(paths)))
+  core.setOutput('time', now.toJSON())
+  core.setOutput('time_unix', Math.floor(+now / 1000))
+  core.setOutput('time_unix_ms', +now)
 }
 
-run()
+run().catch(core.setFailed)
