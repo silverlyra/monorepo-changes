@@ -33,7 +33,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getComparisonBase = exports.fetchComparisonBase = exports.getChangedFiles = exports.getWorkspaceChanges = void 0;
+exports.parseRevision = exports.getComparisonBase = exports.fetchComparisonBase = exports.getChangedFiles = exports.getWorkspaceChanges = void 0;
 const child_process_1 = __nccwpck_require__(2081);
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const core = __importStar(__nccwpck_require__(2186));
@@ -93,13 +93,13 @@ function fetchComparisonBase() {
             });
         }
     }
-    core.info(`Comparing against ${base} (${parseRevision(base)})`);
+    core.info(`Looking for changes from ${base} (${parseRevision(base)})`);
     return base;
 }
 exports.fetchComparisonBase = fetchComparisonBase;
 function getComparisonBase() {
     const base = process.env.GITHUB_BASE_REF;
-    return base ? base.replace(/^refs\/heads\//, '') : 'HEAD^';
+    return base ? base.replace(/^refs\/(?:heads|tags)\//, '') : 'HEAD~';
 }
 exports.getComparisonBase = getComparisonBase;
 function parseRevision(commit) {
@@ -110,6 +110,7 @@ function parseRevision(commit) {
     });
     return stdout.trim();
 }
+exports.parseRevision = parseRevision;
 function hasCommit(commit) {
     const { status } = (0, child_process_1.spawnSync)('git', ['rev-parse', '--verify', commit], {
         stdio: 'ignore'
@@ -208,6 +209,9 @@ function run() {
         const paths = new Map([...workspaces.values()]
             .map(workspace => [...workspace.aliases].map(alias => [alias, workspace.path]))
             .flat(1));
+        const base = (0, compare_1.getComparisonBase)();
+        core.setOutput('base', base);
+        core.setOutput('base_commit', (0, compare_1.parseRevision)(base));
         core.setOutput('changes', JSON.stringify(Object.fromEntries(changes)));
         core.setOutput('paths', JSON.stringify(Object.fromEntries(paths)));
         core.setOutput('workspaces', JSON.stringify(Object.fromEntries([...workspaces.values()].map(workspace => {

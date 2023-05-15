@@ -78,17 +78,16 @@ export function fetchComparisonBase(): string {
     }
   }
 
-  core.info(`Comparing against ${base} (${parseRevision(base)})`)
-
+  core.info(`Looking for changes from ${base} (${parseRevision(base)})`)
   return base
 }
 
 export function getComparisonBase(): string {
   const base = process.env.GITHUB_BASE_REF
-  return base ? base.replace(/^refs\/heads\//, '') : 'HEAD^'
+  return base ? base.replace(/^refs\/(?:heads|tags)\//, '') : 'HEAD~'
 }
 
-function parseRevision(commit: string): string {
+export function parseRevision(commit: string): string {
   const {stdout} = spawnSync('git', ['rev-parse', '--verify', commit], {
     stdio: ['ignore', 'pipe', 'inherit'],
     encoding: 'utf-8',

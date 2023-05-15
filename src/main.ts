@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 
-import {getWorkspaceChanges} from './compare'
+import {getComparisonBase, getWorkspaceChanges, parseRevision} from './compare'
 import {detect} from './workspace'
 
 async function run(): Promise<void> {
@@ -25,6 +25,9 @@ async function run(): Promise<void> {
       .flat(1)
   )
 
+  const base = getComparisonBase()
+  core.setOutput('base', base)
+  core.setOutput('base_commit', parseRevision(base))
   core.setOutput('changes', JSON.stringify(Object.fromEntries(changes)))
   core.setOutput('paths', JSON.stringify(Object.fromEntries(paths)))
   core.setOutput(
