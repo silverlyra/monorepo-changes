@@ -210,6 +210,13 @@ function run() {
             .flat(1));
         core.setOutput('changes', JSON.stringify(Object.fromEntries(changes)));
         core.setOutput('paths', JSON.stringify(Object.fromEntries(paths)));
+        core.setOutput('workspaces', JSON.stringify(Object.fromEntries([...workspaces.values()].map(workspace => {
+            var _a;
+            return [
+                workspace.path,
+                Object.assign(Object.assign({}, workspace), { changed: (_a = changes.get(workspace.path)) !== null && _a !== void 0 ? _a : null })
+            ];
+        })), (_key, value) => (value instanceof Set ? [...value] : value)));
         core.setOutput('time', now.toJSON());
         core.setOutput('time_unix', Math.floor(+now / 1000));
         core.setOutput('time_unix_ms', +now);

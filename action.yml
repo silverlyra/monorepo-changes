@@ -7,3 +7,29 @@ branding:
 runs:
   using: 'node16'
   main: 'dist/index.js'
+outputs:
+  changes:
+    description: >-
+      A JSON object mapping workspace paths to either true if that workspace has
+      changed (or any of its dependencies changed, recursively) or `false` if it
+      has no changes (and doesn't need to be retested or rebuilt).
+  paths:
+    description: >-
+      A JSON object mapping workspace aliases to paths, where a workspace alias
+      is how a package manager refers to that workspace. This makes it easy to
+      translate (e.g.) NPM package names or Cargo crate names to paths within
+      the repository.
+  workspaces:
+    description: >-
+      A JSON object mapping workspace paths to all known details about the workspace.
+  time:
+    description: >-
+      The time the action was run, as an ISO 8601 timestamp with millisecond
+      precision (JS `Date.toISOString`).
+  time_unix:
+    description: >-
+      The time the action was run, as a UNIX timestamp.
+  time_unix_ms:
+    description: >-
+      The time the action was run, as a UNIX timestamp expressed in milliseconds
+      (JS `Date.now`).
