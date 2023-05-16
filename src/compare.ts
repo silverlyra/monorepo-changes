@@ -6,11 +6,12 @@ import * as core from '@actions/core'
 import type {Workspace} from './workspace'
 
 export function getWorkspaceChanges(
-  workspaces: Map<string, Workspace>
+  workspaces: Map<string, Workspace>,
+  changedFiles: Set<string>
 ): Map<string, boolean> {
   const changes: Map<string, boolean> = new Map()
+  const files = [...changedFiles]
 
-  const files = [...getChangedFiles()]
   if (core.isDebug()) {
     for (const file of files.sort((a, b) => a.localeCompare(b))) {
       core.debug(`Changed: ${file}`)

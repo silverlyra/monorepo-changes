@@ -1,6 +1,11 @@
 import * as core from '@actions/core'
 
-import {getComparisonBase, getWorkspaceChanges, parseRevision} from './compare'
+import {
+  getChangedFiles,
+  getComparisonBase,
+  getWorkspaceChanges,
+  parseRevision
+} from './compare'
 import {detect} from './workspace'
 
 async function run(): Promise<void> {
@@ -12,9 +17,18 @@ async function run(): Promise<void> {
     console.dir(workspaces, {colors: true})
   }
 
-  const changes = getWorkspaceChanges(workspaces)
+  const files = getChangedFiles()
+  const changes = getWorkspaceChanges(workspaces, files)
   for (const base of [...changes.keys()].sort((a, b) => a.localeCompare(b))) {
     if (changes.get(base)) core.info(`Workspace changed: ${base}`)
+  }
+
+  if ([...files].some(f => f.startsWith('.github/'))) {
+    core.info('.github/ changed; treating all workspaces as needing a rebuild')
+
+    for (const base of changes.keys()) {
+      changes.set(base, true)
+    }
   }
 
   const paths = new Map(

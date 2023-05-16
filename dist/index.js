@@ -37,9 +37,9 @@ exports.parseRevision = exports.getComparisonBase = exports.fetchComparisonBase 
 const child_process_1 = __nccwpck_require__(2081);
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const core = __importStar(__nccwpck_require__(2186));
-function getWorkspaceChanges(workspaces) {
+function getWorkspaceChanges(workspaces, changedFiles) {
     const changes = new Map();
-    const files = [...getChangedFiles()];
+    const files = [...changedFiles];
     if (core.isDebug()) {
         for (const file of files.sort((a, b) => a.localeCompare(b))) {
             core.debug(`Changed: ${file}`);
@@ -201,10 +201,17 @@ function run() {
             // eslint-disable-next-line no-console
             console.dir(workspaces, { colors: true });
         }
-        const changes = (0, compare_1.getWorkspaceChanges)(workspaces);
+        const files = (0, compare_1.getChangedFiles)();
+        const changes = (0, compare_1.getWorkspaceChanges)(workspaces, files);
         for (const base of [...changes.keys()].sort((a, b) => a.localeCompare(b))) {
             if (changes.get(base))
                 core.info(`Workspace changed: ${base}`);
+        }
+        if ([...files].some(f => f.startsWith('.github/'))) {
+            core.info('.github/ changed; treating all workspaces as needing a rebuild');
+            for (const base of changes.keys()) {
+                changes.set(base, true);
+            }
         }
         const paths = new Map([...workspaces.values()]
             .map(workspace => [...workspace.aliases].map(alias => [alias, workspace.path]))
