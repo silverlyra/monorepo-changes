@@ -238,6 +238,79 @@ run().catch(core.setFailed);
 
 /***/ }),
 
+/***/ 8644:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const promises_1 = __nccwpck_require__(3292);
+const path_1 = __nccwpck_require__(1017);
+const core = __importStar(__nccwpck_require__(2186));
+/**
+ * Read a workspace definition file, feeding it through the given `parser`.
+ *
+ * Fails the action if either reading or parsing throws an exception.
+ */
+function read(path, parser) {
+    return __awaiter(this, void 0, void 0, function* () {
+        core.debug(`  read: ${JSON.stringify((0, path_1.resolve)(path))}`);
+        let contents;
+        try {
+            contents = yield (0, promises_1.readFile)(path, 'utf-8');
+        }
+        catch (err) {
+            core.setFailed(`Failed to read ${(0, path_1.resolve)(path)}:`);
+            core.error(err instanceof Error ? err : `${err}`);
+            process.exit(1);
+        }
+        try {
+            return parser(contents);
+        }
+        catch (err) {
+            core.setFailed(`Failed to parse ${(0, path_1.resolve)(path)}:`);
+            core.error(err instanceof Error ? err : `${err}`);
+            process.exit(1);
+        }
+    });
+}
+exports["default"] = read;
+
+
+/***/ }),
+
 /***/ 3738:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -285,6 +358,7 @@ const path_1 = __importDefault(__nccwpck_require__(1017));
 const core = __importStar(__nccwpck_require__(2186));
 const toml_1 = __importDefault(__nccwpck_require__(4920));
 const glob_1 = __nccwpck_require__(7975);
+const read_1 = __importDefault(__nccwpck_require__(8644));
 function detect() {
     return __awaiter(this, void 0, void 0, function* () {
         const packages = yield discover();
@@ -323,8 +397,7 @@ exports.discover = discover;
 function visit(base) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        const contents = yield promises_1.default.readFile(path_1.default.join(base, 'Cargo.toml'), 'utf-8');
-        const pkg = toml_1.default.parse(contents);
+        const pkg = yield (0, read_1.default)(path_1.default.join(base, 'Cargo.toml'), toml_1.default.parse);
         const name = (_a = pkg.package) === null || _a === void 0 ? void 0 : _a.name;
         if (!name)
             return null;
@@ -495,6 +568,7 @@ const promises_1 = __importDefault(__nccwpck_require__(3292));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const core = __importStar(__nccwpck_require__(2186));
 const glob_1 = __nccwpck_require__(7975);
+const read_1 = __importDefault(__nccwpck_require__(8644));
 function detect() {
     return __awaiter(this, void 0, void 0, function* () {
         const packages = yield discover();
@@ -532,25 +606,19 @@ exports.discover = discover;
 function visit(base) {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const pkg = JSON.parse(yield promises_1.default.readFile(path_1.default.join(base, 'package.json'), 'utf-8'));
-            return {
-                path: base,
-                aliases: new Set([pkg.name]),
-                dependencies: new Set(),
-                npm: {
-                    name: pkg.name,
-                    dependencies: new Set([
-                        ...Object.keys((_a = pkg.dependencies) !== null && _a !== void 0 ? _a : {}),
-                        ...Object.keys((_b = pkg.devDependencies) !== null && _b !== void 0 ? _b : {})
-                    ])
-                }
-            };
-        }
-        catch (err) {
-            core.debug(`npm: failed to visit ${base}: ${err}`);
-            return null;
-        }
+        const pkg = yield (0, read_1.default)(path_1.default.join(base, 'package.json'), JSON.parse);
+        return {
+            path: base,
+            aliases: new Set([pkg.name]),
+            dependencies: new Set(),
+            npm: {
+                name: pkg.name,
+                dependencies: new Set([
+                    ...Object.keys((_a = pkg.dependencies) !== null && _a !== void 0 ? _a : {}),
+                    ...Object.keys((_b = pkg.devDependencies) !== null && _b !== void 0 ? _b : {})
+                ])
+            }
+        };
     });
 }
 exports.visit = visit;

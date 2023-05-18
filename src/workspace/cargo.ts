@@ -5,6 +5,7 @@ import * as core from '@actions/core'
 import TOML from 'toml'
 
 import {glob} from '../glob'
+import read from '../read'
 import type {Workspace} from '.'
 
 export interface CargoWorkspace extends Workspace {
@@ -43,8 +44,11 @@ export async function discover(): Promise<string[] | null> {
 }
 
 export async function visit(base: string): Promise<CargoWorkspace | null> {
-  const contents = await fs.readFile(path.join(base, 'Cargo.toml'), 'utf-8')
-  const pkg: CargoPackage = TOML.parse(contents)
+  const pkg: CargoPackage = await read(
+    path.join(base, 'Cargo.toml'),
+    TOML.parse
+  )
+
   const name = pkg.package?.name
   if (!name) return null
 

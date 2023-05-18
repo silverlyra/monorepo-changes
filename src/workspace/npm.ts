@@ -4,6 +4,7 @@ import path from 'path'
 import * as core from '@actions/core'
 
 import {glob} from '../glob'
+import read from '../read'
 import type {Workspace} from '.'
 
 export interface NPMWorkspace extends Workspace {
@@ -41,26 +42,22 @@ export async function discover(): Promise<string[] | null> {
 }
 
 export async function visit(base: string): Promise<NPMWorkspace | null> {
-  try {
-    const pkg: NPMPackage = JSON.parse(
-      await fs.readFile(path.join(base, 'package.json'), 'utf-8')
-    )
+  const pkg: NPMPackage = await read(
+    path.join(base, 'package.json'),
+    JSON.parse
+  )
 
-    return {
-      path: base,
-      aliases: new Set([pkg.name]),
-      dependencies: new Set(),
-      npm: {
-        name: pkg.name,
-        dependencies: new Set([
-          ...Object.keys(pkg.dependencies ?? {}),
-          ...Object.keys(pkg.devDependencies ?? {})
-        ])
-      }
+  return {
+    path: base,
+    aliases: new Set([pkg.name]),
+    dependencies: new Set(),
+    npm: {
+      name: pkg.name,
+      dependencies: new Set([
+        ...Object.keys(pkg.dependencies ?? {}),
+        ...Object.keys(pkg.devDependencies ?? {})
+      ])
     }
-  } catch (err) {
-    core.debug(`npm: failed to visit ${base}: ${err}`)
-    return null
   }
 }
 
