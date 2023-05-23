@@ -45,7 +45,7 @@ export function getChangedFiles(): Set<string> {
 
   const {stdout} = spawnSync(
     'git',
-    ['diff', '--name-status', '--diff-filter=d', `${base}..HEAD`],
+    ['diff', '--name-status', '--diff-filter=d', `${base}...HEAD`],
     {stdio: ['ignore', 'pipe', 'inherit'], encoding: 'utf-8', timeout: 5000}
   )
   return new Set(

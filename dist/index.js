@@ -65,7 +65,7 @@ function getWorkspaceChanges(workspaces, changedFiles) {
 exports.getWorkspaceChanges = getWorkspaceChanges;
 function getChangedFiles() {
     const base = fetchComparisonBase();
-    const { stdout } = (0, child_process_1.spawnSync)('git', ['diff', '--name-status', '--diff-filter=d', `${base}..HEAD`], { stdio: ['ignore', 'pipe', 'inherit'], encoding: 'utf-8', timeout: 5000 });
+    const { stdout } = (0, child_process_1.spawnSync)('git', ['diff', '--name-status', '--diff-filter=d', `${base}...HEAD`], { stdio: ['ignore', 'pipe', 'inherit'], encoding: 'utf-8', timeout: 5000 });
     return new Set(stdout
         .split('\n')
         .filter(Boolean)
